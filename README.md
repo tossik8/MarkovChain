@@ -14,10 +14,11 @@ This project simulates a game of Rock-Paper-Scissors against an adaptive compute
 3. Run the `play_game()` function from the `main.py` file.
 4. Follow the on-screen instructions to play the game.
 ## How It Works
-The game starts with a transition matrix representing the probabilities of the computer's moves (Rock, Paper, Scissors).
+The game begins with an initial transition matrix that represents the probabilities of transitioning between states.
+These states are determined by the outcome of the previous round and the opponent's move, encompassing combinations such as "Victory with Rock (VR)", "Victory with Paper (VP)", and "Victory with Scissors (VS)", as well as their corresponding losing states.
 In each round, the player inputs their move, and the computer predicts its move based on the current transition matrix.
-After both moves are made, the outcome of the round is determined, and the computer's score is updated.
-The transition matrix is adjusted based on the player's move, and the game continues until the end conditions are met.
+Once both moves are made, the round's outcome is determined, and the transition matrix is adjusted based on the player's move.
+This iterative process continues until the game meets its end conditions.
 ## Contributors
 - Nikita Toropov
 ## License
