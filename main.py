@@ -20,11 +20,14 @@ def play_game() -> None:
     None
     """
     transition_matrix = {
-        'R': np.array([1 / 3] * 3),
-        'P': np.array([1 / 3] * 3),
-        'S': np.array([1 / 3] * 3)
+        'VR': np.array([1 / 6] * 6),
+        'VP': np.array([1 / 6] * 6),
+        'VS': np.array([1 / 6] * 6),
+        'LR': np.array([1 / 6] * 6),
+        'LP': np.array([1 / 6] * 6),
+        'LS': np.array([1 / 6] * 6)
     }
-    state = 'R'
+    state = 'VR'
     i = 0
     score = 0
     while i < 30 and score < 10:
@@ -34,11 +37,36 @@ def play_game() -> None:
         print('Opponent:', opponent_move, 'vs Computer:', computer_move)
         res = fight(opponent_move, computer_move)
         score += res
-        transitions = adjust_transitions(opponent_move, transition_matrix[state])
-        transition_matrix[state] = transitions
-        state = opponent_move
+        new_state = determine_state(res, opponent_move)
+        if new_state is not None:
+            transitions = adjust_transitions(new_state, transition_matrix[state])
+            transition_matrix[state] = transitions
+            state = new_state
         print_round_results(res, score)
-    print('Learned transitions:', transition_matrix)
+
+
+def determine_state(res: int, opponent_move: str) -> str | None:
+    """
+    Determines the state based on the result of the round and the opponent's move.
+
+    Parameters:
+    ----------
+    res : int
+        Result of the round: 1 for victory, 0 for tie, -1 for loss.
+    opponent_move : str
+        Opponent's move ('R', 'P', or 'S').
+
+    Returns:
+    -------
+    str or None
+        The determined state (V or L + the opponent's move).
+        Returns None if the result is a tie.
+    """
+    if res == 1:
+        return 'L' + opponent_move
+    if res == -1:
+        return 'V' + opponent_move
+    return None
 
 
 def ask_move() -> str:
@@ -90,14 +118,18 @@ def predict_counter_move(transitions: npt.NDArray[np.float32]) -> str:
     Parameters:
     ----------
     transitions : npt.NDArray[np.float32]
-        NumPy array containing transition probabilities.
+        Transition probabilities for moves 'R', 'P', and 'S',
+        and their corresponding victory/defeat transitions.
 
     Returns:
     -------
     str
         The predicted counter move ('R', 'P', or 'S').
     """
-    predicted_move = np.random.choice(['R', 'P', 'S'], p=transitions)
+    move_probabilities = (transitions[0] + transitions[3],
+                          transitions[1] + transitions[4],
+                          transitions[2] + transitions[5])
+    predicted_move = np.random.choice(['R', 'P', 'S'], p=move_probabilities)
     counter_move = get_counter_move(predicted_move)
     return counter_move
 
@@ -119,10 +151,10 @@ def adjust_transitions(new_state: str,
     npt.NDArray[np.float32]
         Updated transition probabilities.
     """
-    states = ('R', 'P', 'S')
+    states = ('VR', 'VP', 'VS', 'LR', 'LP', 'LS')
     for i, state in enumerate(states):
         if state == new_state:
-            transitions[i] += transitions[i] * 0.02
+            transitions[i] += transitions[i] * 0.05
         else:
             transitions[i] -= transitions[i] * 0.01
     transitions /= transitions.sum()
